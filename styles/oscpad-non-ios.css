@@ -1,0 +1,14 @@
+body {
+  background-image: url(../images/ipad-portrait.png);
+  background-repeat: no-repeat;
+  background-position: left top;
+  margin: 42px;
+}
+
+#main {
+  width: 752px;
+  overflow: hidden;
+  margin: 0;
+  position: absolute;
+  z-index: -2;
+}
