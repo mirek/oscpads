@@ -1,0 +1,93 @@
+
+#main {
+  padding: .5em;
+}
+
+.osc-slider {
+  width: 5em;
+  height: 25em;
+  border: solid .5em #333;
+  -webkit-border-radius: 5em;
+}
+
+.osc-slider-pointer {
+  margin-left: auto;
+  margin-right: auto;
+  width: 4em;
+  height: 4em;
+  border: solid black .5em;
+  -webkit-border-radius: 4em;
+  position: absolute;
+  z-index: -1;
+}
+
+.osc-slider-label {
+  text-align: center;
+  line-height: 1em;
+  font-family: Century Gothic;
+  font-size: 3em;
+}
+
+.osc-touch {
+  height: 35em;
+  border: solid .5em black;
+  background: #efefef;
+}
+
+.osc-wheel {
+  width: 5em;
+  height: 5em;
+}
+
+.osc-wheel-pointer {
+  width: 4em;
+  height: 4em;
+  border: solid .5em black;
+  -webkit-border-radius: 5em;
+  background-image: -webkit-gradient(
+    radial,
+    50% 100%,
+    5,
+    50% 0%,
+    5,
+    color-stop(0.0, white),
+    color-stop(0.5, white),
+    color-stop(0.5, black),
+    color-stop(1.0, black)
+  );
+  position: absolute;
+  z-index: -1;
+}
+
+.osc-momentary {
+  width: 4em;
+  height: 4em;
+  border: solid .5em black;
+  -webkit-border-radius: 1em;
+}
+
+@-webkit-keyframes osc-highlight {
+  from {
+    background-color: black;
+    -webkit-animation-timing-function: ease-out;
+  }
+  to {
+    background-color: white;
+  }
+}
+
+.osc-momentary-active {
+  -webkit-animation-name: osc-highlight;
+  -webkit-animation-duration: .1s;
+  -webkit-animation-iteration-count: 1;
+}
+
+.osc-on-off {
+  width: 4em;
+  height: 4em;
+  border: solid .5em black;
+}
+
+.osc-on-off-active {
+  background-color: black;
+}
