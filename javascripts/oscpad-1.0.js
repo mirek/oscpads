@@ -2,6 +2,38 @@
 // © 2010 Mirek Rusin http://oscpad.com
 //                    http://quartzcomposer.com
 var OSCpad = {
+
+  values: new Array,
+  
+  // We want a dummy element to attach event listeners and dispatch
+  // OSCpad custom events
+  element: document.createElement(),
+  
+  addEventListener: function(type, listener, useCapture) {
+    OSCpad.element.addEventListener(type, listener, useCapture)
+  },
+
+  removeEventListener: function(type, listener, useCapture) {
+    OSCpad.element.removeEventListener(type, listener, useCapture)
+  },
+
+  dispatch: function(type, bubbles, cancelable, params) {
+    var event = document.createEvent("Events")
+    event.initEvent(type, bubbles, cancelable)
+    event.params = params
+    OSCpad.element.dispatchEvent(event)
+  },
+
+  // Return OSC addresses by traversing all HTML elements with data-osc-address attribute
+  oscAddresses: function() {
+    var oscAddressElements = document.querySelectorAll('[data-osc-address]')
+    var r = []
+    for (var i = 0; i < oscAddressElements.length; i++) {
+      var oscAddress = oscAddressElements[i].getAttribute('data-osc-address')
+      r.push(oscAddress)
+    }
+    return r
+  },
   
   // Return true if running in iPhone/iPod/iPad, false otherwise
   iOS: function() {
@@ -26,8 +58,6 @@ var OSCpad = {
       document.write('<link rel="stylesheet" href="../styles/oscpad-non-ios.css" type="text/css" media="screen" charset="utf-8">')
   },
   
-  values: new Array,
-  
   // Set the value of specified type for address
   //
   // Supported types mimic Quartz Composer's OSC support and include:
@@ -45,6 +75,8 @@ var OSCpad = {
   // 
   set: function(address, value, type) {
     OSCpad.values[address] = { key: address, value: value, type: type, timestamp: new Date().getTime() }
+    if (OSCpad.element)
+      OSCpad.dispatch('oscpad:set', false, false, { address: address, value: value, type: type })
   },
   
   setString: function(k, v) {
@@ -157,3 +189,111 @@ var OSCpad = {
   }
 
 }
+
+// Unobstructive document onload. When using prototypejs/jquery/etc use the method provided by the library.
+// Otherwise you can use:
+//
+//   OSCpad.addEventListener('loaded', function(e) { ... } )
+//
+OSCpad.onload = function() {
+  if (arguments.callee.done) return
+  arguments.callee.done = true
+  if (OSCpad.onloadTimer)
+    clearInterval(OSCpad.onloadTimer)
+  OSCpad.dispatch('loaded', false, false)
+}
+
+if (/WebKit/i.test(navigator.userAgent)) {
+  OSCpad.onloadTimer = setInterval(function() {
+    if (/loaded|complete/.test(document.readyState)) {
+      OSCpad.onload()
+    }
+  }, 50)
+}
+
+// Only for development mode when using OSX Safari 
+if (!OSCpad.iOS()) {
+
+  // Logger window lists all addresses and captures signals in development mode
+  // on OSX Safari
+  var OSCLogger = {
+    
+    // Hash table to link osc-address with HTML elements for type and value
+    // so we can modify innerHTML
+    elementReferences: {},
+    
+    // Create logger element and register itself as event listener for 'oscpad:set' events
+    create: function() {
+      var tableElement = document.createElement('table')
+
+      var trElement = document.createElement('tr')
+      tableElement.appendChild(trElement)
+
+      var thElement = document.createElement('th')
+      thElement.setAttribute('class', 'osc-logger-th-address')
+      thElement.innerHTML = 'Address'
+      trElement.appendChild(thElement)
+
+      thElement = document.createElement('th')
+      thElement.setAttribute('class', 'osc-logger-th-type')
+      thElement.innerHTML = 'Type'
+      trElement.appendChild(thElement)
+
+      thElement = document.createElement('th')
+      thElement.setAttribute('class', 'osc-logger-th-value')
+      thElement.innerHTML = 'Value'
+      trElement.appendChild(thElement)
+
+      var oscAddresses = OSCpad.oscAddresses()
+      for (var i = 0; i < oscAddresses.length; ++i) {
+        var oscAddress = oscAddresses[i]
+        var elementReference = OSCLogger.elementReferences[oscAddress] = {}
+
+        trElement = document.createElement('tr')
+
+        var tdElement = document.createElement('td')
+        tdElement.innerHTML = oscAddresses[i]
+        tdElement.setAttribute('class', 'osc-logger-td-address')
+        trElement.appendChild(tdElement)
+
+        tdElement = document.createElement('td')
+        elementReference['type'] = tdElement
+        tdElement.setAttribute('class', 'osc-logger-td-type')
+        tdElement.innerHTML = ''
+        trElement.appendChild(tdElement)
+
+        tdElement = document.createElement('td')
+        elementReference['value'] = tdElement
+        tdElement.setAttribute('class', 'osc-logger-td-value')
+        tdElement.setAttribute('align', 'right')
+        tdElement.innerHTML = ''
+        trElement.appendChild(tdElement)
+
+        tableElement.appendChild(trElement)
+      }
+
+      var body = document.getElementsByTagName('body')[0]
+      
+      var divElement = document.createElement('div')
+      divElement.setAttribute('id', 'osc-logger')
+      body.appendChild(divElement)
+
+      divElement.appendChild(tableElement)
+
+      OSCpad.addEventListener('oscpad:set', function(e) {
+        var elementReference = OSCLogger.elementReferences[e.params['address']]
+        if (elementReference) {
+          elementReference['type'].innerHTML = e.params['type']
+          elementReference['value'].innerHTML = e.params['value']
+        }
+      })
+    }
+  }
+  
+  // Create OSCLogger instance
+  OSCpad.addEventListener('loaded', function(e) {
+    OSCLogger.create()
+  })
+  
+}
+

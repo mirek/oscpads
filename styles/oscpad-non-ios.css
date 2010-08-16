@@ -1,3 +1,4 @@
+
 body {
   background-image: url(../images/ipad-portrait.png);
   background-repeat: no-repeat;
@@ -11,4 +12,51 @@ body {
   margin: 0;
   position: absolute;
   z-index: -2;
+}
+
+/* OSC Logger */
+
+#osc-logger {
+  position: absolute;
+  top: 0;
+  left: 860px;
+  background: #555;
+  padding: 0;
+  color: white;
+  font-family: Optima, 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  font-size: 14px;
+  border: solid .5em gray;
+  -webkit-border-radius: 1em;
+  min-width: 20em;
+}
+
+#osc-logger table {
+  background-color: #666;
+  -webkit-border-radius: .5em;
+}
+
+#osc-logger th, #osc-logger td {
+  padding: .1em .3em;
+}
+
+#osc-logger th {
+  background-color: #666;
+  color: #aaa;
+}
+
+#osc-logger tr:nth-child(odd) td {
+  background-color: #595959;
+}
+
+#osc-logger td {
+  background-color: #555;
+}
+
+#osc-logger .osc-logger-td-value {
+  min-width: 12em;
+  overflow: hidden;
+}
+
+#osc-logger .osc-logger-td-type {
+  min-width: 5em;
 }
