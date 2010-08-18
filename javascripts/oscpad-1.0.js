@@ -128,6 +128,26 @@ var OSCpad = {
       return null
   },
 
+  oscAddressesPropertyListXMLFormat_v1_0: function() {
+    var array = OSCpad.oscAddresses()
+    if (array.length > 0) {
+      var l = array.length
+      var plist = new Array
+      plist.push('<?xml version="1.0" encoding="utf-8"?>')
+      plist.push('<!DOCTYPE plist PUBLIC "-//Apple Computer//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">')
+      plist.push('<plist version="1.0">')
+      plist.push('  <array>')
+      for (var i = 0; i < l; ++i) {
+        plist.push(['    <string>', array[i].toString().replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'), '</string>'].join(''))
+      }
+      plist.push('  </array>')
+      plist.push('</plist>')
+      return plist.join("\n")
+    } else {
+      return null
+    }
+  },
+
   fetchPropertyListXMLFormat_v1_0: function() {
     var array = OSCpad.fetchArray()
     if (array) {
