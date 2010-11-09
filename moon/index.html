@@ -1,0 +1,229 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+  "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+  <head>
+    <meta http-equiv="Content-type" content="text/html; charset=utf-8">
+    
+    <!-- Always set the title in index.html of your pad. At the moment it's not being
+         used but we'll soon use it as a pad title in other places. -->
+    <title>Moon for OSCpad.com</title>
+    
+    <!-- Same as above, always define as we're going to use it when showing pads soon. -->
+    <meta name="description" content="Moon example for OSCpad.com">
+    
+    <!-- This one is totally optional. We'll probably use it when it's defined.
+         If it's not defined we won't show copyright notice for the pad. -->
+    <meta name="copyright" content="© 2010 Mirek Rusin <mirek [at] me [dot] com>">
+    
+    <!-- Default OSCpad styles, always include exactly like this. -->
+    <link rel="stylesheet" href="../styles/oscpad.css" type="text/css" media="screen" charset="utf-8">
+    
+    <!-- Optionally you can move your styles to separate file for clarity, it's up to you. -->
+    <!-- <link rel="stylesheet" href="mystyle.css" type="text/css" media="screen" charset="utf-8"> -->
+    
+    <!-- Default OSCpad javascript, always include exactly like this with the newest possible version.
+         We'll post more info on currently used versions and future OSCpad iPad versions will have an
+         (possibly automatic) function to upgrade OSCpad base including all css/javascripts/others.
+         Note javascript file is versioned so we avoid conflicts. You are guaranteed that all previous
+         versions will be included with future iPad application versions. -->
+    <script src="../javascripts/oscpad-1.0.js" type="text/javascript" charset="utf-8"></script>
+    
+    <!-- Use this line with oscpad-1.0.js to write conditional css include. On Mac Safari
+         ../styles/oscpad-non-ios.css will be loaded, on iPad ../styles/oscpad-ios.css.
+         In future versions this may be more automatic, but for javascript version oscpad-1.0.js
+         you want to do it this way. -->
+    <script type="text/javascript" charset="utf-8">OSCpad.writeConditionalCSS()</script>
+    
+    <!-- Optionally you can load javascript files, for example if you're (re)using components
+         created by yourself or others. -->
+    <!-- <script src="myscript.js" type="text/javascript" charset="utf-8"></script> -->
+    
+    <!-- Prototype library is included from version 1.7_rc2. You are guaranteed this file
+         will be there in all future versions of OSCpad for iPad. We're not using it here
+         to make things faster. Note there is some performance issues when using prototypejs
+         as it's a bit intrusive for javascript Array class. -->
+    <!-- <script src="../javascripts/prototype-1.7_rc2.js" type="text/javascript" charset="utf-8"></script> -->
+    
+    <!-- We could move styles to the separate file, ie. moon.css - for this tutorial pad it's
+         probably easier for you to just go through and read comments in single file. -->
+    <style type="text/css" media="screen">
+      
+      /* This is our animation defined as rotation from 0 to 360 degrees.
+         We'll use it to rotate our moon image below. */
+      @-webkit-keyframes full-spin {
+        from {
+          -webkit-transform: rotate(0deg);
+        }
+        to {
+          -webkit-transform: rotate(360deg);
+        }
+      }
+    
+      /* The moon image has this id. Let's style it... */
+      #moon {
+        
+        /* Rotate for 5 minutes full turn, infinite loop
+           using keyframes defined in 'full-spin' few lines above. */
+        -webkit-animation-name: full-spin;
+       	-webkit-animation-duration: 300s;
+       	-webkit-animation-timing-function: linear;
+       	-webkit-animation-iteration-count: infinite;
+      }
+      
+      /* Main div with id set to main should be always at the top
+         of the scene as a sinle child of <body> element. This is
+         a convention, please follow to make things easier. */
+      #main {
+        
+        /* Center everything horizontally in our main div. */
+        text-align: center;
+      }
+    
+      /* Let's set background color to pure black. Note you don't
+         want to set it like this:
+         
+           background: black; -- wrong!
+           
+         ...as this would overwrite iPad background image when developing
+         on Mac. If you want to set the background for the whole scene set it
+         for #main or your own root container inside #main. */
+      body {
+        background-color: black;
+      }
+      
+      /* Well, how to say it... actually I've forgotten to put those
+         in ../styles/oscpad.css. They will be included with the next
+         version. Should I version css file as well the same way
+         javascript is versioned? Let me know on github if you've
+         got opinion on this one. */
+      * {
+        -webkit-user-drag: none;
+        -webkit-user-select: none;
+      }
+      
+      /* On-off buttons. Please note we're using convention for naming
+         classes starting with osc-... - in the future versions we may
+         have sharable components so let's stick with this convention.
+         If you want to develop your own component use osc- prefix for
+         the class and put javascript in separate file - with the same
+         name, ie. osc-fader.js. Just send me pull request from github
+         and we'll include your ui control in next version. */
+      .osc-on-off {
+        
+        /* Alien-like glow - confusing I know. We're using shadow
+           property to create glow. */
+        -webkit-box-shadow: 0 0 5em #61e6d4;
+      }
+      
+      .osc-on-off {
+        width: 4em;
+        height: 4em;
+        float: left;
+        margin-left: .5em;
+        margin-right: 1.5em;
+        -webkit-border-radius: 5em;
+      }
+      
+      .osc-on-off-active {
+        background-color: white;
+      }
+      
+      #copyright {
+        color: #61e6d4;
+        font-family: Century Gothic;
+        text-align: center;
+        font-size: 1.5em;
+        
+        padding-top: 5em;
+        height: 5em;
+        
+        /* ...with alien glow */
+        text-shadow: 0 0 .25em #61e6d4;
+      }
+      
+    </style>
+    <script type="text/javascript" charset="utf-8">
+      
+      // On off buttons. Notice convention for naming classes. If you want your ui element to be included
+      // in next release, please follow.
+      // Some techy/geeky stuff you can skip if you're not js guru. You may've noticed we're not instantiating
+      // objects for each on-off button. This is intentional - all js classes should have static/class methods
+      // to manage ui elements. All instance state should be preserved in main html element (the one having
+      // data-osc-address attribute).
+      var OSCOnOff = {
+
+        mousedown: function(event) {
+          // First let's stop default event handling for the HTML element
+          event.preventDefault()
+          with (event.target) {
+            if (className === "osc-on-off") {
+              className = 'osc-on-off osc-on-off-active'
+              OSCpad.setBoolean(event.target.getAttribute('data-osc-address'), true)
+            } else {
+              className = 'osc-on-off'
+              OSCpad.setBoolean(event.target.getAttribute('data-osc-address'), false)
+            }
+          }
+        },
+
+        // Same as mousedown...
+        touchstart: function(event) {
+          return OSCOnOff.mousedown(event)
+        }
+
+      }
+
+      // You may want to use prototypejs/jquery to do it. We've decided to use pure
+      // javascript to gain some performance and we're using OSCpad provided custom
+      // event.
+      OSCpad.addEventListener('loaded', function() {
+      
+        // Let's register event listeners for Mac Safari (mousedown) and iPad Safari (touchstart) for
+        // our on/off buttons
+        var elements = document.querySelectorAll('.osc-on-off')
+        for (var i = 0; i < elements.length; i++) {
+          elements[i].addEventListener('touchstart', OSCOnOff.touchstart, true)
+          elements[i].addEventListener('mousedown',  OSCOnOff.mousedown, true)
+        }
+
+        // If running Mac Safari print OSC messages to the console using console.log(...)
+        if (!OSCpad.iOS())
+          OSCpad.fetchPeriodically(1 / 30)
+      })
+    
+    </script>
+  </head>
+  <body>
+    
+    <!-- The main div should always be the root div in the whole scene
+         as a single <body> child. -->
+    <div id="main">
+      
+      <!-- Our moon image, styled above. -->
+      <img id="moon" src="moon.png" style="padding-top: 5em" />
+
+      <!-- ...yes, yes, this padding left is hardcoded for 7 elements because
+           I have no fucking idea how to centre it properly. Do you know how? -->
+      <div style="padding-left: 2.9em; padding-top: 10em">
+        
+        <!-- Notice data-osc-address fields. Those guys define our OSC message names.
+             We use it by convention, always use and read osc address from this attribute
+             in the main osc ui html element.
+             "data-" html attribute prefix has a special meaning in HTML and it's reserved
+             for all user defined attributes - it's for us, let's use it. -->
+        <div class="osc-on-off" data-osc-address="/on-off/1"></div>
+        <div class="osc-on-off" data-osc-address="/on-off/2"></div>
+        <div class="osc-on-off" data-osc-address="/on-off/3"></div>
+        <div class="osc-on-off" data-osc-address="/on-off/4"></div>
+        <div class="osc-on-off" data-osc-address="/on-off/5"></div>
+        <div class="osc-on-off" data-osc-address="/on-off/6"></div>
+        <div class="osc-on-off" data-osc-address="/on-off/7"></div>
+      </div>
+      
+      <div id="copyright">moon example @ oscpad.com</div>
+      
+      <div style="clear: both"></div>
+    
+    </div>
+  </body>
+</html>
